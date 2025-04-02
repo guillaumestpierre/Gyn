@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "build:css": "postcss input.css -o output.css"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.0.17"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.0.17"
+  }
+}
