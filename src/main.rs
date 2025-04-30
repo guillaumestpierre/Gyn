@@ -3,7 +3,6 @@ use dioxus_logger::tracing::{info, Level};
 
 use gyn::routes::routes::Route;
 use crate::db::create_tables;
-//use crate::db::del_poids;
 
 // Importer le module db
 mod db;

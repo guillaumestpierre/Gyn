@@ -1,16 +1,24 @@
-use chrono::NaiveDate;
+use chrono::{Local, NaiveDate};
+use crate::models::r#const::EXERCISE_LIST;
 
-#[derive(Debug, Clone)]
-pub struct Training {
-    id: i32,
-    date: NaiveDate,
-    duration: i32,
-    exercices: Vec<Exercise>
+#[derive(Debug, Clone, PartialEq)]
+pub struct Exercise {
+    pub name: String,
+    pub reps: Vec<(u32, f32)>,
+    pub date: NaiveDate,
+    pub starter: bool,
 }
 
-#[derive(Debug, Clone)]
-pub struct Exercise {
-    id: i32,
-    name: String,
-    reps: Vec<(u32, u32)>,
+impl Exercise {
+    pub fn new() -> Exercise{
+        Exercise{name: String::new(), reps: vec![(0,0.0)], date: Local::now().naive_local().into(), starter: false}
+    }
+    pub fn build(name: String, reps: Vec<(u32, f32)>, date: NaiveDate, starter: bool) -> Result<Exercise, ()>{
+        if EXERCISE_LIST.contains(&name.as_str()) {
+            Ok(Exercise { name, reps, date, starter })
+        }
+        else {
+            Err(())
+        }
+    }
 }

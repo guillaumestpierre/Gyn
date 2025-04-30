@@ -2,7 +2,6 @@ use rusqlite::{Connection, Result};
 use std::sync::{Arc, Mutex};
 use once_cell::sync::Lazy;
 use rand::Rng;
-use chrono::{NaiveDate, Utc};
 
 // Connexion globale à la base de données persistante
 pub static DB_CONNECTION: Lazy<Arc<Mutex<Connection>>> = Lazy::new(|| {
@@ -26,34 +25,22 @@ pub fn get_db_connection() -> Arc<Mutex<Connection>> {
     DB_CONNECTION.clone()
 }
 
-pub fn del_poids() -> Result<()> {
-    let conn = get_db_connection();
-    let conn = conn.lock().unwrap();
-
-    conn.execute("DELETE FROM weight", [])?;
-    Ok(())
-}
-
 // Fonction pour initialiser les tables
 pub fn create_tables() -> Result<()> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
     
     conn.execute(
+        "DROP TABLE exercise",
+        [],
+    )?;
+
+    conn.execute(
         "CREATE TABLE IF NOT EXISTS exercise (
             id    INTEGER PRIMARY KEY,
             name  TEXT NOT NULL,
-            reps   TEXT NOT NULL
-        )",
-        [],
-    )?;
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS training (
-            id    INTEGER PRIMARY KEY,
-            date  DATE,
-            duration   INTEGER,
-            exercices   TEXT NOT NULL,
-            note   TEXT NOT NULL
+            num     INTEGER NOT NULL,
+            weight  FLOAT
         )",
         [],
     )?;
@@ -66,8 +53,9 @@ pub fn create_tables() -> Result<()> {
         [],
     )?;
 
+    
     conn.execute(
-        "DELETE FROM training",
+        "DROP TABLE training",
         [],
     )?;
 

@@ -1,12 +1,9 @@
 #![allow(non_snake_case)]
-use std::sync::Arc;
-
 use dioxus::prelude::*;
 use chrono::NaiveDate;
 use crate::routes::routes::Route::Home;
 use rusqlite::{params, Result};
-use plotly::{Plot, Scatter};
-use serde_json::json;
+use dioxus_charts::LineChart;
 
 use crate::db::get_db_connection;
 
@@ -18,6 +15,7 @@ fn save_data(data: (u32, NaiveDate)) -> Result<()> {
         "INSERT INTO weight (weight, date) VALUES (?1, ?2)",
         params![data.0, data.1.to_string()],
     )?;
+    
     Ok(())
 }
 
@@ -36,7 +34,7 @@ fn fetch_data() -> Result<Vec<(NaiveDate, u32)>> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
 
-    let mut stmt = conn.prepare("SELECT date, weight FROM weight ORDER BY date DESC")?;
+    let mut stmt = conn.prepare("SELECT date, weight FROM weight ORDER BY date")?;
     let rows = stmt.query_map([], |row| {
         let date: String = row.get(0)?; 
         let weight: u32 = row.get(1)?;
@@ -46,25 +44,17 @@ fn fetch_data() -> Result<Vec<(NaiveDate, u32)>> {
     Ok(rows.collect::<Result<Vec<_>>>()?)
 }
 
-fn generate_plot(data: Vec<(NaiveDate, u32)>) -> String {
-    let dates: Vec<String> = data.iter().map(|(d, _)| d.to_string()).collect();
-    let values: Vec<u32> = data.iter().map(|(_, v)| *v).collect();
-
-    let trace = Scatter::new(dates, values)
-        .mode(plotly::common::Mode::LinesMarkers)
-        .name("Sales");
-
-    let mut plot = Plot::new();
-    plot.add_trace(trace);
-
-    json!(plot).to_string()
-}
-
 pub fn Poids() -> Element {
     let mut weight_history = use_signal(|| fetch_data().unwrap());
     let data = weight_history.read().clone();
 
-    let plot_json = generate_plot(data.to_vec());
+    let chart_serie: Vec<f32> = data.iter()
+        .map(|(_, weight)| (*weight as f32))
+        .collect();
+    let chart_label: Vec<String> = data.iter()
+        .map(|(date, _)| (date.format("%Y-%m-%d").to_string()))
+        .collect();
+
     let mut weight_text = use_signal(|| String::new());
     let mut weight = use_signal(|| 0u32);
     let mut weight_to_del = use_signal(|| 0u32);
@@ -128,26 +118,16 @@ pub fn Poids() -> Element {
             }
             div {
                 class: "flex flex-1 flex-col justify-center items-center space-y-6",
-                iframe {
-                    width: "800",
-                    height: "500",
-                    srcdoc: format!(r#"
-                        <html>
-                        <head>
-                            <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-                        </head>
-                        <body>
-                            <div id="plot"></div>
-                            <script>
-                                var plot_data = {plot_json};
-                                Plotly.newPlot('plot', plot_data.data, plot_data.layout);
-                            </script>
-                        </body>
-                        </html>
-                    "#)
+
+                LineChart{
+                    series: vec![chart_serie.clone()],
+                    labels: chart_label,
+                    width: "130%",
+                    height: "130%",
+                    show_dots: false
                 }
                 div {
-                    class: "flex flex-none flex-row space-x-6",
+                    class: "flex flex-none pt-[120px] pl-[150px] flex-row space-x-6",
                     
                     div {
                         class: "flex flex-row gap-4",
@@ -183,7 +163,7 @@ pub fn Poids() -> Element {
             }
             div {
                 class:"grid grid-cols-1 content-start py-5 px-5 h-110 overflow-y-auto",
-                {data.iter().map(|(date, weight)| {
+                {data.iter().rev().map(|(date, weight)| {
                     let date = date.to_owned();
                     let weight = *weight;
                     rsx! {

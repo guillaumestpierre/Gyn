@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::components::home::Home;
-use crate::components::exos::Exos;
+use crate::components::exos_list::ExosList;
 use crate::components::hist::Hist;
 use crate::components::poids::Poids;
 use crate::components::notes::Notes;
@@ -13,7 +13,7 @@ pub enum Route {
     #[route("/")]
     Home {},
     #[route("/exos")]
-    Exos {},
+    ExosList {},
     #[route("/hist")]
     Hist {},
     #[route("/poids")]

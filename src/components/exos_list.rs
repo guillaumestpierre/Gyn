@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 
 use crate::routes::routes::Route::Home;
 
-pub fn Exos() -> Element {
+pub fn ExosList() -> Element {
     rsx! {
         div {
             class: "flex h-screen bg-neutral-300",   

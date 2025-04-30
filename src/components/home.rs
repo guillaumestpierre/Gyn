@@ -8,7 +8,7 @@ pub fn Home() -> Element {
         (Route::Poids {}, "Poids"),
         (Route::Hist {}, "Historique"),
         (Route::Notes {}, "Notes"),
-        (Route::Exos {}, "Exercices"),
+        (Route::ExosList {}, "Exercices"),
     ];
 
     rsx! {
