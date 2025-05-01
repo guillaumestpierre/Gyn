@@ -7,7 +7,7 @@ use dioxus_charts::LineChart;
 
 use crate::db::get_db_connection;
 
-fn save_data(data: (u32, NaiveDate)) -> Result<()> {
+fn save_data(data: (f32, NaiveDate)) -> Result<()> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
     
@@ -19,7 +19,7 @@ fn save_data(data: (u32, NaiveDate)) -> Result<()> {
     Ok(())
 }
 
-fn delete_data(data: (u32, String)) -> Result<()> {
+fn delete_data(data: (f32, String)) -> Result<()> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
     
@@ -30,14 +30,14 @@ fn delete_data(data: (u32, String)) -> Result<()> {
     Ok(())
 }
 
-fn fetch_data() -> Result<Vec<(NaiveDate, u32)>> {
+fn fetch_data() -> Result<Vec<(NaiveDate, f32)>> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
 
     let mut stmt = conn.prepare("SELECT date, weight FROM weight ORDER BY date")?;
     let rows = stmt.query_map([], |row| {
         let date: String = row.get(0)?; 
-        let weight: u32 = row.get(1)?;
+        let weight: f32 = row.get(1)?;
         Ok((NaiveDate::parse_from_str(&date, "%Y-%m-%d").unwrap(), weight))
     })?;
 
@@ -56,18 +56,18 @@ pub fn Poids() -> Element {
         .collect();
 
     let mut weight_text = use_signal(|| String::new());
-    let mut weight = use_signal(|| 0u32);
-    let mut weight_to_del = use_signal(|| 0u32);
+    let mut weight = use_signal(|| 0f32);
+    let mut weight_to_del = use_signal(|| 0f32);
     
     let mut date_text = use_signal(|| String::new());
     let mut selected_date = use_signal(|| chrono::Local::now().date_naive());
     let mut date_to_del = use_signal(|| String::new());
     
-    let mut weight_data = use_signal(|| None::<(u32, NaiveDate)>);
+    let mut weight_data = use_signal(|| None::<(f32, NaiveDate)>);
     let mut save_error = use_signal(|| None::<String>);
     
     let save_data_closure = move |_| {
-        if *weight.read() > 0 {
+        if *weight.read() > 0.0 {
             let add_data = (*weight.read(), *selected_date.read());
             
             match save_data(add_data) {
@@ -124,6 +124,8 @@ pub fn Poids() -> Element {
                     labels: chart_label,
                     width: "130%",
                     height: "130%",
+                    lowest: 150.0,
+                    highest: 180.0,
                     show_dots: false
                 }
                 div {
@@ -137,7 +139,7 @@ pub fn Poids() -> Element {
                             value: "{weight_text}",
                             oninput: move |event| {
                                 weight_text.set(event.value().to_string());
-                                if let Ok(num) = event.value().parse::<u32>() {
+                                if let Ok(num) = event.value().parse::<f32>() {
                                     weight.set(num);
                                 }
                             }
