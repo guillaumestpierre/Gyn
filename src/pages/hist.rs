@@ -1,8 +1,62 @@
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
+use chrono::NaiveDate;
+use crate::db::get_db_connection;
+use crate::{models::training::Exercise, routes::routes::Route::Home};
+use crate::components::old_exos::OldExo;
+use crate::models::r#const::{TABLE_EXERCISES, TABLE_REPS};
 
-use crate::routes::routes::Route::Home;
+fn fetch_exercises() -> Result<Vec<Exercise>, rusqlite::Error>{
+    let conn = get_db_connection();
+    let conn = conn.lock().unwrap();
+    let mut res_exos: Vec<Exercise> = Vec::new();
+
+    let mut stmt_exo = conn.prepare(&format!("SELECT exid, name, date, starter FROM {}", 
+        TABLE_EXERCISES))?;
+
+    let exo_rows = stmt_exo.query_map([], |row| {
+        let exid: u32 = row.get(0)?;
+        let name: String = row.get(1)?;
+        let date_str: String = row.get(2)?;
+        let is_starter: bool = row.get(3)?;
+        let date = NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")
+            .map_err(|e| rusqlite::Error::FromSqlConversionFailure(
+                0, rusqlite::types::Type::Text, Box::new(e)))?;
+        Ok((exid, name, date, is_starter))
+    })?;
+
+    for row in exo_rows{
+        println!("{:?}", row);
+        if let Ok((exid, name, date, starter)) = row{
+            let mut stmt_reps = conn.prepare(&format!(
+                "SELECT repnum, weight FROM {} WHERE exid = ?1", TABLE_REPS
+            ))?;
+            let rep_rows = stmt_reps.query_map([exid], |row|{
+                Ok((row.get(0)?, row.get(1)?))
+            })?;
+            let reps: Vec<(u32, f32)> = rep_rows.collect::<Result<_, _>>()?;
+            res_exos.push(Exercise{
+                exid,
+                name,
+                reps,
+                date,
+                starter
+            });
+        }
+    }
+    Ok(res_exos)
+}
+
 pub fn Hist() -> Element {
+
+    let data = fetch_exercises();
+    let exercises: Vec<Exercise> = match data {
+        Ok(_) => {data.unwrap()},
+        Err(_)=>{Vec::new()}
+    };
+
+    println!("exos: {:?}", exercises);
+
     rsx! {
         div {
             class: "flex h-screen bg-neutral-300",   
@@ -18,8 +72,21 @@ pub fn Hist() -> Element {
                 }
             }
             div {
-                class: "flex flex-1 justify-center items-center",
-                
+                class: "flex flex-1 flex-col p-4 items-center space-y-6 overflow-y-auto",
+                        
+                div {
+                    class: "grid grid-cols-1 gap-6 w-full px-4",
+                    key: "{exercises.read().len()}",
+                    {exercises.iter().map(|ex_with_id| {
+                        let id = ex_with_id.exid;
+                        rsx! {
+                            OldExo {
+                                key: "{id}",
+                                exercise: Some(ex_with_id.clone()),
+                            }
+                        }
+                    })}
+                }
             }
         }
     }

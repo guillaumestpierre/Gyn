@@ -6,7 +6,7 @@ use chrono::NaiveDate;
 use dioxus::prelude::*;
 use rusqlite::params;
 use crate::models::r#const::{TABLE_EXERCISES, TABLE_REPS};
-use crate::components::new_exos::Exo;
+use crate::components::new_exos::NewExo;
 use crate::models::training::Exercise;
 use crate::routes::routes::Route::Home;
 use crate::db::get_db_connection;
@@ -60,7 +60,6 @@ fn get_first_id ()->u32{
 }
 
 pub fn New() -> Element {
-
     static NEXT_ID: LazyLock<AtomicU32> = LazyLock::new(|| {
         AtomicU32::new(get_first_id())
     }); 
@@ -200,7 +199,7 @@ pub fn New() -> Element {
                     {exercises.read().iter().map(|ex_with_id| {
                         let id = ex_with_id.exid;
                         rsx! {
-                            Exo {
+                            NewExo {
                                 key: "{id}",
                                 exercise: Some(ex_with_id.clone()),
                                 on_change: move |updated_exercise| update_exercise(id, updated_exercise),

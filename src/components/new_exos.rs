@@ -5,7 +5,7 @@ use crate::models::r#const::EXERCISE_LIST;
 use crate::models::training::Exercise;
 
 #[component]
-pub fn Exo(
+pub fn NewExo(
     exercise: Option<Exercise>,
     on_change: Option<EventHandler<Exercise>>,
     on_delete: Option<EventHandler<()>>,
