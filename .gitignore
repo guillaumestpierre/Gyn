@@ -6,8 +6,6 @@
 /.dioxus/
 /node_modules/
 
-*.lock
-
 # this file will generate by tailwind:
 /assets/tailwind.css
 

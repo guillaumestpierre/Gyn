@@ -27,6 +27,7 @@ pub fn Exo(
     let update_exercise = move || {
         if let Some(handler) = &on_change {
             let exercise = Exercise {
+                exid: initial_exercise.exid,
                 name: selected_exercise_name.read().to_string(),
                 reps: reps.read().clone(),
                 date: Local::now().naive_local().into(),
@@ -36,7 +37,7 @@ pub fn Exo(
         }
     };
     
-    let mut add_rep = move |_| {
+    let add_rep = move |_| {
         let mut updated_reps = reps.read().clone();
         updated_reps.push((0, 0.0));
         reps.set(updated_reps);
@@ -61,7 +62,6 @@ pub fn Exo(
     
     let delete_exercise = move |_| {
         if let Some(handler) = &on_delete {
-            println!("Exercice sup (EXO): {}", selected_exercise_name);
             handler.call(());
         }
     };

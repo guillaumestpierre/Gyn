@@ -122,8 +122,8 @@ pub fn Poids() -> Element {
                 LineChart{
                     series: vec![chart_serie.clone()],
                     labels: chart_label,
-                    width: "130%",
-                    height: "130%",
+                    width: "140%",
+                    height: "140%",
                     lowest: 150.0,
                     highest: 180.0,
                     show_dots: false

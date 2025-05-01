@@ -7,7 +7,6 @@ pub fn Home() -> Element {
         (Route::Stats {}, "Stats"),
         (Route::Poids {}, "Poids"),
         (Route::Hist {}, "Historique"),
-        (Route::Notes {}, "Notes"),
         (Route::ExosList {}, "Exercices"),
     ];
 

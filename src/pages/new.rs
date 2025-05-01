@@ -1,29 +1,42 @@
 #![allow(non_snake_case)]
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::LazyLock;
+use std::vec;
 use chrono::NaiveDate;
 use dioxus::prelude::*;
 use rusqlite::params;
-use crate::components::exo::Exo;
+use crate::models::r#const::{TABLE_EXERCISES, TABLE_REPS};
+use crate::components::new_exos::Exo;
 use crate::models::training::Exercise;
 use crate::routes::routes::Route::Home;
 use crate::db::get_db_connection;
 
-fn save_data(exercises: Vec<Exercise>) -> rusqlite::Result<()> {
+fn save_data(exercises: Vec<Exercise>, date: NaiveDate) -> rusqlite::Result<()> {
     let conn = get_db_connection();
     let mut conn = conn.lock().unwrap();
     let tx = conn.transaction()?;
     {    
-        let mut stmt = tx.prepare("INSERT INTO exercise (name, num, weight, date, starter) VALUES (?1, ?2, ?3, ?4, ?5)")?;
+        let query_exo = format!("INSERT INTO {} (exid, name, date, starter) VALUES (?1, ?2, ?3, ?4)", 
+            TABLE_EXERCISES);
+        let mut stmt_exo = tx.prepare(&query_exo)?;
+        
+        let query_reps = format!("INSERT INTO {} (exid, repnum, weight) VALUES (?1, ?2, ?3)", 
+            TABLE_REPS);
+        let mut stmt_reps = tx.prepare(&query_reps)?;
 
         for exercise in &exercises {
-            // Only save exercises that have a name and at least one rep
             if !exercise.name.is_empty() && !exercise.reps.is_empty() {
+                stmt_exo.execute(params![
+                    exercise.exid,
+                    exercise.name,
+                    date.to_string(),
+                    exercise.starter
+                ])?;
                 for &(num, weight) in &exercise.reps {
-                    stmt.execute(params![
-                        exercise.name, 
+                    stmt_reps.execute(params![
+                        exercise.exid, 
                         num, 
                         weight, 
-                        exercise.date.to_string(), 
-                        exercise.starter
                     ])?;
                 }
             }
@@ -34,37 +47,51 @@ fn save_data(exercises: Vec<Exercise>) -> rusqlite::Result<()> {
     Ok(())
 }
 
+fn get_first_id ()->u32{
+    let conn = get_db_connection();
+    let conn = conn.lock().unwrap();
+    let max_id: Option<u32> = conn.query_row(
+        "SELECT MAX(exid) FROM exercises", 
+        [], 
+        |row| row.get(0)
+    ).unwrap_or(Some(0));
+    
+    max_id.unwrap_or(0)
+}
+
 pub fn New() -> Element {
 
-    #[derive(Clone, Debug, PartialEq)]
-    struct ExerciseWithId {
-        id: usize,
-        exercise: Exercise,
+    static NEXT_ID: LazyLock<AtomicU32> = LazyLock::new(|| {
+        AtomicU32::new(get_first_id())
+    }); 
+       
+    fn get_next_id() -> u32 {
+        NEXT_ID.fetch_add(1, Ordering::SeqCst)
     }
 
-    static mut NEXT_ID: usize = 0;
-    
-    fn get_next_id() -> usize {
-        unsafe {
-            let id = NEXT_ID;
-            NEXT_ID += 1;
-            id
-        }
-    }
-
-    let mut exercises = use_signal(|| vec![ExerciseWithId {
-        id: get_next_id(),
-        exercise: Exercise::new(),
+    let mut exercises = use_signal(|| vec![Exercise{
+        exid: get_next_id(),
+        name: String::new(),
+        reps: vec![(0,0.0)],
+        date: chrono::Local::now().date_naive(),
+        starter: false
     }]);
     
     let mut save_error = use_signal(|| None::<String>);
     let mut save_success = use_signal(|| false);
 
-    let mut save_data_closure = move |_| {
+    let mut selected_date = use_signal(|| chrono::Local::now().date_naive());
+    let mut date_text = use_signal(|| String::new());
+
+    let save_data_closure = move |_| {
         let current_exercises: Vec<Exercise> = exercises.read()
-            .iter()
-            .map(|ex_with_id| ex_with_id.exercise.clone())
-            .collect();
+        .iter()
+        .map(|ex| {
+            let mut new_ex = ex.clone();
+            new_ex.exid = get_next_id();
+            new_ex
+        })
+        .collect();
 
         let valid_exercises: Vec<Exercise> = current_exercises
             .into_iter()
@@ -72,14 +99,11 @@ pub fn New() -> Element {
             .collect();
         
         if !valid_exercises.is_empty() {
-            match save_data(valid_exercises.clone()) {
+            match save_data(valid_exercises.clone(), *selected_date.read()) {
                 Ok(_) => {
                     save_error.set(None);
                     save_success.set(true);
-                    exercises.set(vec![ExerciseWithId {
-                        id: get_next_id(),
-                        exercise: Exercise::new(),
-                    }]);
+                    exercises.set(vec![Exercise::new()]);
                     println!("Données sauvegardées: {} exercices", valid_exercises.len());
                 },
                 Err(e) => {
@@ -94,32 +118,35 @@ pub fn New() -> Element {
         }
     };
 
-    let mut add_exercise = move |_| {
+    let add_exercise = move |_| {
         let mut current_exercises = exercises.read().clone();
-        current_exercises.push(ExerciseWithId {
-            id: get_next_id(),
-            exercise: Exercise::new(),
-        });        exercises.set(current_exercises);
+        current_exercises.push(Exercise{
+            exid: get_next_id(),
+            name: String::new(),
+            reps: vec![(0,0.0)],
+            date: chrono::Local::now().date_naive(),
+            starter: false
+        });
+        exercises.set(current_exercises);
     };
     
-    let mut update_exercise = move |id: usize, updated_exercise: Exercise| {
+    let mut update_exercise = move |id: u32, updated_exercise: Exercise| {
         let mut current_exercises = exercises.read().clone();
-        if let Some(index) = current_exercises.iter().position(|ex| ex.id == id) {
-            current_exercises[index].exercise = updated_exercise;
+        if let Some(index) = current_exercises.iter().position(|ex| ex.exid == id) {
+            current_exercises[index] = updated_exercise;
             exercises.set(current_exercises);
         }
     };
     
-    let mut delete_exercise = move |id: usize| {
+    let mut delete_exercise = move |id: u32| {
         
         let mut current_exercises = exercises.read().clone();
-        if let Some(index) = current_exercises.iter().position(|ex| ex.id == id) {
+        if let Some(index) = current_exercises.iter().position(|ex| ex.exid == id) {
             current_exercises.remove(index);          
             exercises.set(current_exercises);
         } else {
             println!("Exercice avec ID {} non trouvé", id);
         }
-        println!("aprèsm del {:?}", exercises);
     };
 
     rsx! {
@@ -147,6 +174,18 @@ pub fn New() -> Element {
                         onclick: add_exercise,
                         "Ajouter un exercice"
                     }
+
+                    input {
+                        class: "px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
+                        r#type: "date",
+                        value: "{selected_date.read().format(\"%Y-%m-%d\")}",
+                        oninput: move |event| {
+                            date_text.set(event.value().to_string());
+                            if let Ok(date) = NaiveDate::parse_from_str(&event.value(), "%Y-%m-%d") {
+                                selected_date.set(date);
+                            }
+                        }
+                    }
                     
                     button {
                         class: "px-6 py-3 bg-blue-500 text-white font-medium rounded-lg transition-colors duration-200 hover:bg-blue-600",
@@ -159,11 +198,11 @@ pub fn New() -> Element {
                     class: "grid grid-cols-1 gap-6 w-full px-4",
                     key: "{exercises.read().len()}",
                     {exercises.read().iter().map(|ex_with_id| {
-                        let id = ex_with_id.id;
+                        let id = ex_with_id.exid;
                         rsx! {
                             Exo {
                                 key: "{id}",
-                                exercise: Some(ex_with_id.exercise.clone()),
+                                exercise: Some(ex_with_id.clone()),
                                 on_change: move |updated_exercise| update_exercise(id, updated_exercise),
                                 on_delete: move |_| delete_exercise(id)
                             }

@@ -24,18 +24,29 @@ pub fn get_db_connection() -> Arc<Mutex<Connection>> {
 pub fn create_tables() -> Result<()> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
-    
+
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS exercise (
+        "CREATE TABLE IF NOT EXISTS exercises (
             id    INTEGER PRIMARY KEY,
+            exid  INTEGER UNIQUE, 
             name  TEXT NOT NULL,
-            num     INTEGER NOT NULL,
-            weight  FLOAT,
             date    DATE,
             starter BOOL
         )",
         [],
     )?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS reps (
+            id    INTEGER PRIMARY KEY,
+            exid    INTEGER,
+            repnum     INTEGER NOT NULL,
+            weight  FLOAT,
+            FOREIGN KEY (exid) REFERENCES exercises(exid)
+        )",
+        [],
+    )?;
+
     conn.execute(
         "CREATE TABLE IF NOT EXISTS weight (
             id    INTEGER PRIMARY KEY,

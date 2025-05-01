@@ -1,12 +1,11 @@
 use dioxus::prelude::*;
 
-use crate::components::home::Home;
-use crate::components::exos_list::ExosList;
-use crate::components::hist::Hist;
-use crate::components::poids::Poids;
-use crate::components::notes::Notes;
-use crate::components::stats::Stats;
-use crate::components::new::New;
+use crate::pages::home::Home;
+use crate::pages::exos_list::ExosList;
+use crate::pages::hist::Hist;
+use crate::pages::poids::Poids;
+use crate::pages::stats::Stats;
+use crate::pages::new::New;
 
 #[derive(Clone, Routable, Debug, PartialEq)]
 pub enum Route {
@@ -18,8 +17,6 @@ pub enum Route {
     Hist {},
     #[route("/poids")]
     Poids {},
-    #[route("/notes")]
-    Notes {},
     #[route("/stats")]
     Stats {},
     #[route("/new")]
