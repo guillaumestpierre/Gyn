@@ -50,12 +50,31 @@ fn fetch_exercises() -> Result<Vec<Exercise>, rusqlite::Error>{
 pub fn Hist() -> Element {
 
     let data = fetch_exercises();
-    let exercises: Vec<Exercise> = match data {
+    let mut exercises = use_signal( || match data {
         Ok(_) => {data.unwrap()},
         Err(_)=>{Vec::new()}
+    });
+
+    let mut update_exercise = move |id: u32, updated_exercise: Exercise| {
+        let mut current_exercises = exercises.read().clone();
+        if let Some(index) = current_exercises.iter().position(|ex| ex.exid == id) {
+            current_exercises[index] = updated_exercise;
+            exercises.set(current_exercises);
+        } else {
+            println!("Exercice avec ID {} non trouvé", id);
+        }
     };
 
-    println!("exos: {:?}", exercises);
+    let mut delete_exercise = move |id: u32| {
+        
+        let mut current_exercises = exercises.read().clone();
+        if let Some(index) = current_exercises.iter().position(|ex| ex.exid == id) {
+            current_exercises.remove(index);          
+            exercises.set(current_exercises);
+        } else {
+            println!("Exercice avec ID {} non trouvé", id);
+        }
+    };
 
     rsx! {
         div {
@@ -83,6 +102,8 @@ pub fn Hist() -> Element {
                             OldExo {
                                 key: "{id}",
                                 exercise: Some(ex_with_id.clone()),
+                                on_change: move |updated_exercise| update_exercise(id, updated_exercise),
+                                on_delete: move |_| delete_exercise(id)
                             }
                         }
                     })}
