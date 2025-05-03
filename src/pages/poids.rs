@@ -7,6 +7,7 @@ use dioxus_charts::LineChart;
 
 use crate::db::get_db_connection;
 
+// TODO: center better the graph and make it bigger
 fn save_data(data: (f32, NaiveDate)) -> Result<()> {
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();

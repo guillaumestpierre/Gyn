@@ -3,7 +3,7 @@ use chrono::NaiveDate;
 use dioxus::prelude::*;
 use crate::models::{r#const::EXERCISE_LIST, training::Exercise};
 
-// TODO: put modify button far right, copy new_exos UI when modifying
+// TODO: fix UI, copy new_exos UI when modifying, what for save button to delete exo
 #[component]
 pub fn OldExo(
     exercise: Option<Exercise>,
@@ -12,6 +12,8 @@ pub fn OldExo(
 ) -> Element {
 
     let initial_exercise = exercise.unwrap_or_else(Exercise::new);
+
+    let mut to_delete = use_signal(||false);
 
     let mut name = use_signal(|| initial_exercise.name.clone());
     let mut reps = use_signal(|| {
@@ -26,8 +28,17 @@ pub fn OldExo(
     
     let mut edit_state = use_signal(||false);
 
-    let save_date_closure = move||{
-        if let Some(handler) = &on_change{
+    let delete_exercise = move || {
+        if let Some(handler) = &on_delete {
+            handler.call(());
+        }
+    };
+
+    let save_data_closure = move||{
+        if *to_delete.read(){
+            delete_exercise();
+        }
+        else if let Some(handler) = &on_change{
             let exercise = Exercise {
                 exid: initial_exercise.exid,
                 name: name.to_string(),
@@ -58,16 +69,17 @@ pub fn OldExo(
         updated_reps.push((0, 0.0));
         reps.set(updated_reps);
     };
-
-    let delete_exercise = move || {
-        if let Some(handler) = &on_delete {
-            handler.call(());
-        }
-    };
-    
+   
     rsx! {
         div {
-            class: "flex flex-col bg-neutral-100 p-6 rounded-lg shadow-md gap-4 w-full",
+            class: {
+                let base_class = "flex flex-col p-6 rounded-lg shadow-md gap-4 w-full";
+                if *to_delete.read() {
+                    format!("{} bg-red-100", base_class)
+                } else {
+                    format!("{} bg-neutral-100", base_class)
+                }
+            },
             div {
                 label {
                     class: "inline-flex items-center cursor-pointer",
@@ -99,9 +111,9 @@ pub fn OldExo(
                 button{
                     class:"px-6 py-3 bg-blue-500 text-white justify-right rounded-lg transition-colors duration-200 hover:bg-blue-600",
                     onclick: move|_|{
-                        let current_state = edit_state.read().clone();
+                        let current_state = *edit_state.read();
                         if current_state {
-                            save_date_closure();
+                            save_data_closure();
                         }
                         edit_state.set(!current_state);
                     },
@@ -117,7 +129,10 @@ pub fn OldExo(
                         true => {true},
                         false => {false}
                     },
-                    onclick: move |_| delete_exercise(),
+                    onclick: move |_| {
+                        let current_to_delete = *to_delete.read();
+                        to_delete.set(!current_to_delete);
+                    },
                     "✕"
                 }
             }

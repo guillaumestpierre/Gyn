@@ -8,7 +8,6 @@ use crate::components::old_exos::OldExo;
 use crate::models::r#const::{TABLE_EXERCISES, TABLE_REPS};
 
 
-// TODO: save modification/deltion to the DB
 fn fetch_exercises() -> Result<Vec<Exercise>, rusqlite::Error>{
     let conn = get_db_connection();
     let conn = conn.lock().unwrap();
