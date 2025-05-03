@@ -1,8 +1,9 @@
 #![allow(non_snake_case)]
+use chrono::NaiveDate;
 use dioxus::prelude::*;
 use crate::models::{r#const::EXERCISE_LIST, training::Exercise};
 
-// TODO: put modify button far right, copy new_exos UI when modifying, declare and use the delete_data_closure, implement editing reps, date and starter
+// TODO: put modify button far right, copy new_exos UI when modifying, declare and use the delete_data_closure, allow to add and delete reps
 #[component]
 pub fn OldExo(
     exercise: Option<Exercise>,
@@ -13,16 +14,15 @@ pub fn OldExo(
     let initial_exercise = exercise.unwrap_or_else(Exercise::new);
 
     let mut name = use_signal(|| initial_exercise.name.clone());
-    let reps = use_signal(|| {
+    let mut reps = use_signal(|| {
         if initial_exercise.reps.is_empty() {
             vec![(0u32, 0f32)]
         } else {
             initial_exercise.reps.clone()
         }
     });
-    let mut new_reps: Vec<(u32,f32)>=reps.read().clone();   
-    let mut date = initial_exercise.date;
-    let mut starter = initial_exercise.starter;
+    let mut date = use_signal(|| initial_exercise.date);
+    let mut starter = use_signal(||initial_exercise.starter);
     
     let mut edit_state = use_signal(||false);
 
@@ -31,9 +31,9 @@ pub fn OldExo(
             let exercise = Exercise {
                 exid: initial_exercise.exid,
                 name: name.to_string(),
-                reps: new_reps.clone(),
-                date,
-                starter,
+                reps: reps.read().clone(),
+                date: *date.read(),
+                starter: *starter.read(),
             };
             handler.call(exercise);
         }
@@ -44,12 +44,33 @@ pub fn OldExo(
         div {
             class: "flex flex-col bg-neutral-100 p-6 rounded-lg shadow-md gap-4 w-full",
             div {
-                class: "text-base text-gray-600",
-                if initial_exercise.starter {
-                    "Starter"
-                } else {
-                    "Normal"
+                label {
+                    class: "inline-flex items-center cursor-pointer",
+                    input {
+                        class: "sr-only peer",
+                        r#type: "checkbox",
+                        disabled: match !*edit_state.read(){
+                            true => {true},
+                            false => {false}
+                        },
+                        checked: *starter.read(),
+                        oninput: move |event| {
+                            starter.set(event.value().parse().unwrap_or(false));
+                        }
+                    }
+                    div {
+                        class: "relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600",
+                    }
+                    span {
+                        class: "ml-2 text-sm font-medium text-gray-700",
+                        if *starter.read() {
+                            "Starter"
+                        } else {
+                            "Normal"
+                        }
+                    }
                 }
+                
                 button{
                     class:"px-6 py-3 bg-blue-500 text-white justify-right rounded-lg transition-colors duration-200 hover:bg-blue-600",
                     onclick: move|_|{
@@ -66,9 +87,19 @@ pub fn OldExo(
                     }
                 }
             }
-            div {
+            input {
                 class: "flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0 text-base",
-                "{initial_exercise.date}",
+                r#type: "date",
+                value: "{initial_exercise.date.format(\"%Y-%m-%d\")}",
+                disabled: match !*edit_state.read(){
+                    true => {true},
+                    false => {false}
+                },
+                oninput: move |event| {
+                    if let Ok(new_date) = NaiveDate::parse_from_str(&event.value(), "%Y-%m-%d") {
+                        date.set(new_date);
+                    }
+                }         
             }
 
             select {   
@@ -115,14 +146,41 @@ pub fn OldExo(
                             key: "{rep_index}",
                             class: "flex flex-row items-center gap-3 mb-2",
                             
-                            div {
+                            input {
                                 class: "flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0 text-base",
-                                "{num}",
+                                r#type: "number",
+                                min: 1,
+                                disabled: match !*edit_state.read(){
+                                    true => {true},
+                                    false => {false}
+                                },
+                                value: "{num}",
+                                oninput: move |event| {
+                                    if let Ok(new_num) = event.value().parse::<u32>() {
+                                        let mut updated_reps = reps.read().clone();
+                                        updated_reps[rep_index].0 = new_num;
+                                        reps.set(updated_reps);
+                                    }
+                                }
                             }
                             
-                            div {
+                            input {
                                 class: "flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0 text-base",
-                                "{weight}",
+                                r#type: "number",
+                                min: 0,
+                                step: 0.5,
+                                disabled: match !*edit_state.read(){
+                                    true => {true},
+                                    false => {false}
+                                },
+                                value: "{weight}",
+                                oninput: move |event| {
+                                    if let Ok(new_weight) = event.value().parse::<f32>() {
+                                        let mut updated_reps = reps.read().clone();
+                                        updated_reps[rep_index].1 = new_weight;
+                                        reps.set(updated_reps);
+                                    }
+                                }
                             }
                         }
                     }
