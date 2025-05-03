@@ -83,14 +83,9 @@ pub fn New() -> Element {
     let mut date_text = use_signal(|| String::new());
 
     let save_data_closure = move |_| {
-        let current_exercises: Vec<Exercise> = exercises.read()
-        .iter()
-        .map(|ex| {
-            let mut new_ex = ex.clone();
-            new_ex.exid = get_next_id();
-            new_ex
-        })
-        .collect();
+        let current_exercises: Vec<Exercise> = exercises.read().clone();
+
+        println!("Exos: {:?}", current_exercises);
 
         let valid_exercises: Vec<Exercise> = current_exercises
             .into_iter()
@@ -102,7 +97,7 @@ pub fn New() -> Element {
                 Ok(_) => {
                     save_error.set(None);
                     save_success.set(true);
-                    exercises.set(vec![Exercise::new()]);
+                    exercises.set(vec![]);
                     println!("Données sauvegardées: {} exercices", valid_exercises.len());
                 },
                 Err(e) => {
