@@ -2,6 +2,7 @@
 use dioxus::prelude::*;
 use crate::models::{r#const::EXERCISE_LIST, training::Exercise};
 
+// TODO: put modify button far right, copy new_exos UI when modifying, declare and use the delete_data_closure, implement editing reps, date and starter
 #[component]
 pub fn OldExo(
     exercise: Option<Exercise>,
@@ -19,26 +20,24 @@ pub fn OldExo(
             initial_exercise.reps.clone()
         }
     });
-    let mut new_reps: Vec<(u32,f32)>=Vec::new();   
+    let mut new_reps: Vec<(u32,f32)>=reps.read().clone();   
     let mut date = initial_exercise.date;
     let mut starter = initial_exercise.starter;
     
     let mut edit_state = use_signal(||false);
 
     let save_date_closure = move||{
-        let current_state = edit_state;
-        if !*current_state.read(){
-            if let Some(handler) = &on_change{
-                let exercise = Exercise {
-                    exid: initial_exercise.exid,
-                    name: name.to_string(),
-                    reps: new_reps.clone(),
-                    date,
-                    starter,
-                };
-                handler.call(exercise);
-            }
+        if let Some(handler) = &on_change{
+            let exercise = Exercise {
+                exid: initial_exercise.exid,
+                name: name.to_string(),
+                reps: new_reps.clone(),
+                date,
+                starter,
+            };
+            handler.call(exercise);
         }
+        
     };
     
     rsx! {
