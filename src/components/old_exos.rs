@@ -3,7 +3,7 @@ use chrono::NaiveDate;
 use dioxus::prelude::*;
 use crate::models::{r#const::EXERCISE_LIST, training::Exercise};
 
-// TODO: put modify button far right, copy new_exos UI when modifying, declare and use the delete_data_closure, allow to add and delete reps
+// TODO: put modify button far right, copy new_exos UI when modifying
 #[component]
 pub fn OldExo(
     exercise: Option<Exercise>,
@@ -38,6 +38,31 @@ pub fn OldExo(
             handler.call(exercise);
         }
         
+    };
+
+    let mut delete_rep = move |rep_index: usize| {
+        let mut updated_reps = reps.read().clone();
+        if rep_index < updated_reps.len() {
+            updated_reps.remove(rep_index);
+            
+            if updated_reps.is_empty() {
+                updated_reps.push((0, 0.0));
+            }
+            
+            reps.set(updated_reps);
+        }
+    };
+
+    let mut add_rep = move || {
+        let mut updated_reps = reps.read().clone();
+        updated_reps.push((0, 0.0));
+        reps.set(updated_reps);
+    };
+
+    let delete_exercise = move || {
+        if let Some(handler) = &on_delete {
+            handler.call(());
+        }
     };
     
     rsx! {
@@ -85,6 +110,15 @@ pub fn OldExo(
                     } else {
                         "Modifier"
                     }
+                }
+                button {
+                    class: "w-10 h-10 flex-shrink-0 flex items-center justify-center border bg-red-50 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500",
+                    disabled: match !*edit_state.read(){
+                        true => {true},
+                        false => {false}
+                    },
+                    onclick: move |_| delete_exercise(),
+                    "✕"
                 }
             }
             input {
@@ -138,6 +172,15 @@ pub fn OldExo(
                     div { class: "flex-1 px-1", "Répétitions" }
                     div { class: "flex-1 px-1", "Poids (kg)" }
                     div { class: "w-10" }
+                    button {
+                        class: "w-10 h-10 flex-shrink-0 flex items-center justify-center border bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500",
+                        disabled: match !*edit_state.read(){
+                            true => {true},
+                            false => {false}
+                        },
+                        onclick: move |_| add_rep(),
+                        "+"
+                    }
                 }
                 
                 {reps.read().iter().enumerate().map(|(rep_index, &(num, weight))| {
@@ -181,6 +224,16 @@ pub fn OldExo(
                                         reps.set(updated_reps);
                                     }
                                 }
+                            }
+
+                            button {
+                                class: "w-10 h-10 flex-shrink-0 flex items-center justify-center border bg-red-50 rounded-lg hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500",
+                                disabled: match !*edit_state.read(){
+                                    true => {true},
+                                    false => {false}
+                                },
+                                onclick: move |_| delete_rep(rep_index),
+                                "✕"
                             }
                         }
                     }

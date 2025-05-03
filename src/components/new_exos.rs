@@ -21,9 +21,7 @@ pub fn NewExo(
         }
     });
     let mut isStarter = use_signal(|| initial_exercise.starter);
-    
-    let mut rep_number = use_signal(|| reps.read().len());
-    
+      
     let update_exercise = move || {
         if let Some(handler) = &on_change {
             let exercise = Exercise {
@@ -41,7 +39,6 @@ pub fn NewExo(
         let mut updated_reps = reps.read().clone();
         updated_reps.push((0, 0.0));
         reps.set(updated_reps);
-        rep_number.set(reps.read().len());
         update_exercise();
     };
     
@@ -55,7 +52,6 @@ pub fn NewExo(
             }
             
             reps.set(updated_reps);
-            rep_number.set(reps.read().len());
             update_exercise();
         }
     };

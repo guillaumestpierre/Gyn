@@ -83,6 +83,27 @@ fn save_data(exo: Exercise) -> rusqlite::Result<()> {
     Ok(())
 }
 
+fn delete_data(id:u32) -> rusqlite::Result<()> {
+    let conn = get_db_connection();
+    let mut conn = conn.lock().unwrap();
+    let tx = conn.transaction()?;
+
+    {  
+
+        let query_del_reps = format!("DELETE FROM {} WHERE exid = ?1", TABLE_REPS);
+        let mut stmt_reps = tx.prepare(&query_del_reps)?;
+        stmt_reps.execute(params![id])?;
+
+        let query_del_exo = format!("DELETE FROM {} WHERE exid = ?1", TABLE_EXERCISES);
+        let mut stmt_exo = tx.prepare(&query_del_exo)?;
+        stmt_exo.execute(params![id])?;
+
+    }
+    tx.commit()?;
+
+    Ok(())
+}
+
 pub fn Hist() -> Element {
 
     let data = fetch_exercises();
@@ -94,12 +115,12 @@ pub fn Hist() -> Element {
     let mut update_exercise = move |id: u32, updated_exercise: Exercise| {
         let mut current_exercises = exercises.read().clone();
         if let Some(index) = current_exercises.iter().position(|ex| ex.exid == id) {
-            current_exercises[index] = updated_exercise.clone();
-            exercises.set(current_exercises);
-            match save_data(updated_exercise){
+            match save_data(updated_exercise.clone()){
                 Ok(_) =>{println!("Données sauvegardées");},
                 Err(e)=>{println!("Erreur lors de l'enregistrement: {}", e);}
             };
+            current_exercises[index] = updated_exercise;
+            exercises.set(current_exercises);
         } else {
             println!("Exercice avec ID {} non trouvé", id);
         }
@@ -109,6 +130,10 @@ pub fn Hist() -> Element {
         
         let mut current_exercises = exercises.read().clone();
         if let Some(index) = current_exercises.iter().position(|ex| ex.exid == id) {
+            match delete_data(id) {
+                Ok(_)=>{println!("suppression de l'exo avec succès");},
+                Err(e)=>{println!("Échec de la suppression: {}", e);}
+            }
             current_exercises.remove(index);          
             exercises.set(current_exercises);
         } else {
