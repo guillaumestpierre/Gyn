@@ -85,8 +85,6 @@ pub fn New() -> Element {
     let save_data_closure = move |_| {
         let current_exercises: Vec<Exercise> = exercises.read().clone();
 
-        println!("Exos: {:?}", current_exercises);
-
         let valid_exercises: Vec<Exercise> = current_exercises
             .into_iter()
             .filter(|ex| !ex.name.is_empty() && !ex.reps.is_empty())

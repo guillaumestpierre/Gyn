@@ -21,6 +21,11 @@ pub fn NewExo(
         }
     });
     let mut isStarter = use_signal(|| initial_exercise.starter);
+    // UI-only toggle: store weights in kg internally; toggle affects display/input
+    let mut use_lbs = use_signal(|| false);
+    // Editing buffer so typing isn't clobbered by formatting
+    let mut editing_rep = use_signal(|| None::<usize>);
+    let mut editing_value = use_signal(|| String::new());
       
     let update_exercise = move || {
         if let Some(handler) = &on_change {
@@ -138,13 +143,34 @@ pub fn NewExo(
                 class: "flex flex-col gap-2 mt-2",
                 
                 div {
-                    class: "flex flex-row items-center px-2 text-sm font-medium text-gray-600 mb-2",
-                    div { class: "flex-1 px-1", "Répétitions" }
-                    div { class: "flex-1 px-1", "Poids (kg)" }
+                    class: "flex flex-row items-center gap-3 text-sm font-medium text-gray-600 mb-2",
+                    div { class: "flex-1", "Répétitions" }
+                    div { 
+                        class: "flex-1 flex items-center gap-2",
+                        span { "Poids " }
+                        span { if *use_lbs.read() { "(lbs)" } else { "(kg)" } }
+                        label {
+                            class: "inline-flex items-center cursor-pointer ml-2",
+                            input {
+                                class: "sr-only peer",
+                                r#type: "checkbox",
+                                checked: *use_lbs.read(),
+                                oninput: move |event| {
+                                    use_lbs.set(event.value().parse().unwrap_or(false));
+                                }
+                            }
+                            div { class: "relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600" }
+                        }
+                    }
                     div { class: "w-10" }
                 }
                 
                 {reps.read().iter().enumerate().map(|(rep_index, &(num, weight))| {
+                    let display_weight_raw = if *use_lbs.read() { weight * 2.20462 } else { weight };
+                    let display_weight = (display_weight_raw * 10.0).round() / 10.0;
+                    let display_weight_str = format!("{:.1}", display_weight);
+                    let is_editing = *editing_rep.read() == Some(rep_index);
+                    let value_str = if is_editing { editing_value.read().clone() } else { display_weight_str.clone() };
                     rsx! {
                         div {
                             key: "{rep_index}",
@@ -170,11 +196,23 @@ pub fn NewExo(
                                 class: "flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0 text-base",
                                 r#type: "number",
                                 min: "0",
-                                step: "0.5",
+                                step: "0.1",
                                 placeholder: "Poids",
-                                value: "{weight}",
+                                value: "{value_str}",
+                                onfocus: move |_| {
+                                    editing_rep.set(Some(rep_index));
+                                    editing_value.set(String::new());
+                                },
+                                onblur: move |_| {
+                                    editing_rep.set(None);
+                                    editing_value.set(String::new());
+                                },
                                 oninput: move |event| {
-                                    if let Ok(new_weight) = event.value().parse::<f32>() {
+                                    let raw = event.value();
+                                    editing_value.set(raw.clone());
+                                    if let Ok(mut new_weight) = raw.parse::<f32>() {
+                                        if *use_lbs.read() { new_weight = new_weight / 2.20462; }
+                                        new_weight = (new_weight * 10.0).round() / 10.0;
                                         let mut updated_reps = reps.read().clone();
                                         updated_reps[rep_index].1 = new_weight;
                                         reps.set(updated_reps);
