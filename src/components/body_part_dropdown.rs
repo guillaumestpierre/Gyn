@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 use crate::models::body_part::BodyPart;
 
 #[component]
-pub fn BodyPartDropdown(body_part: BodyPart) -> Element {
+pub fn BodyPartDropdown(body_part: BodyPart, on_select: EventHandler<String>) -> Element {
     let mut is_hovered = use_signal(|| false);
 
     rsx! {
@@ -26,6 +26,12 @@ pub fn BodyPartDropdown(body_part: BodyPart) -> Element {
                     for exercise in body_part.exercises.iter() {
                         div {
                             class: "px-4 py-2 hover:bg-gray-50 cursor-pointer text-sm text-gray-700 border-b last:border-b-0",
+                            onclick: {
+                                let exercise = exercise.to_string();
+                                move |_| {
+                                    on_select.call(exercise.clone());
+                                }
+                            },
                             "{exercise}"
                         }
                     }

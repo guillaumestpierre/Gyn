@@ -110,7 +110,7 @@ pub fn Weight() -> Element {
                 class: "w-64 flex-none h-full py-5 px-5 bg-neutral-200",
                 
                 button {
-                    class: "w-full rounded-lg py-2 px-4 bg-cyan-50 text-lg font-bold text-left transition-colors duration-100 hover:bg-cyan-100",
+                    class: "w-full border rounded-lg py-2 px-4 bg-cyan-50 text-lg font-bold text-left transition-colors duration-100 hover:bg-cyan-100",
                     onclick: move |_| {
                         let _ = navigator().push(Home {});
                     },
@@ -138,7 +138,7 @@ pub fn Weight() -> Element {
                         class: "flex flex-row gap-4",
                         input {
                             class: "px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
-                            placeholder: "Weight (lbs)",
+                            placeholder: "Weight",
                             value: "{weight_text}",
                             oninput: move |event| {
                                 weight_text.set(event.value().to_string());
@@ -159,7 +159,7 @@ pub fn Weight() -> Element {
                             }
                         }
                         button {
-                            class: "px-6 py-3 bg-blue-500 text-white font-medium rounded-lg transition-colors duration-200 hover:bg-blue-600",
+                            class: "px-4 py-2 border bg-green-100 font-medium rounded-lg transition-colors duration-200 hover:bg-green-200",
                             onclick: save_data_closure,
                             "Save"
                         }

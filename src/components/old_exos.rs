@@ -24,12 +24,9 @@ pub fn OldExo(
     });
     let mut date = use_signal(|| initial_exercise.date);
     let mut starter = use_signal(||initial_exercise.starter);
-    // UI-only unit toggle: store weights internally in kg; toggle affects display/input only
-    let mut use_lbs = use_signal(|| false);
     // Editing buffer for smooth typing
     let mut editing_rep = use_signal(|| None::<usize>);
     let mut editing_value = use_signal(|| String::new());
-    
     let mut edit_state = use_signal(||false);
 
     let delete_exercise = move || {
@@ -89,7 +86,14 @@ pub fn OldExo(
                 div { 
                     class: "flex items-center",
                     button{
-                        class:"px-6 py-3 bg-blue-500 text-white rounded-lg transition-colors duration-200 hover:bg-blue-600",
+                        class:{
+                            let base_class = "px-6 py-3 border rounded-lg transition-colors duration-200 border";
+                            if *edit_state.read(){
+                                format!("{} bg-green-100 hover:bg-green-200", base_class)
+                            } else {
+                                format!("{} bg-yellow-100 hover:bg-yellow-200", base_class)
+                            }
+                        },
                         onclick: move|_|{
                             let current_state = *edit_state.read();
                             if current_state {
@@ -122,7 +126,7 @@ pub fn OldExo(
                             }
                         }
                         div {
-                            class: "relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600",
+                            class: "relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-200",
                         }
                         span {
                             class: "ml-2 text-sm font-medium text-gray-700",
@@ -199,20 +203,7 @@ pub fn OldExo(
                     div { class: "flex-1", "Reps" }
                     div { 
                         class: "flex-1 flex items-center gap-2",
-                        span { "Weight " }
-                        span { if *use_lbs.read() { "(lbs)" } else { "(kg)" } }
-                        label {
-                            class: "inline-flex items-center cursor-pointer ml-2",
-                            input {
-                                class: "sr-only peer",
-                                r#type: "checkbox",
-                                checked: *use_lbs.read(),
-                                oninput: move |event| {
-                                    use_lbs.set(event.value().parse().unwrap_or(false));
-                                }
-                            }
-                            div { class: "relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600" }
-                        }
+                        span { "Weight" }
                     }
                     button {
                         class: "w-10 h-10 flex-shrink-0 flex items-center justify-center border bg-blue-50 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500",
@@ -226,14 +217,13 @@ pub fn OldExo(
                 }
                 
                 {reps.read().iter().enumerate().map(|(rep_index, &(num, weight))| {
-                    let display_weight_raw = if *use_lbs.read() { weight * 2.20462 } else { weight };
+                    let display_weight_raw = weight;
                     let display_weight = (display_weight_raw * 10.0).round() / 10.0;
                     let display_weight_str = format!("{:.1}", display_weight);
                     let is_editing = *editing_rep.read() == Some(rep_index);
                     let value_str = if is_editing { editing_value.read().clone() } else { display_weight_str.clone() };
                     rsx! {
                         div {
-                            key: "{rep_index}",
                             class: "flex flex-row items-center gap-3 mb-2",
                             
                             input {
@@ -274,9 +264,6 @@ pub fn OldExo(
                                 },
                                 oninput: move |event| {
                                     if let Ok(mut new_weight) = event.value().parse::<f32>() {
-                                        // Convert from lbs to kg if needed
-                                        if *use_lbs.read() { new_weight = new_weight / 2.20462; }
-                                        // round to one decimal in kg before persisting
                                         new_weight = (new_weight * 10.0).round() / 10.0;
                                         let mut updated_reps = reps.read().clone();
                                         updated_reps[rep_index].1 = new_weight;

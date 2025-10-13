@@ -20,7 +20,7 @@ pub fn Home() -> Element {
                     div{
                         class: "mb-4",
                         button {
-                            class: "w-full rounded-lg py-2 px-4 bg-cyan-50 text-lg font-bold text-left transition-colors duration-100 hover:bg-cyan-100",
+                            class: "w-full border rounded-lg py-2 px-4 bg-cyan-50 text-lg font-bold text-left transition-colors duration-100 hover:bg-cyan-100",
                             onclick: move |_| {
                                 let _ = navigator().push(route.clone());
                             },
@@ -33,7 +33,7 @@ pub fn Home() -> Element {
             div {
                 class: "flex flex-1 justify-center items-center",
                 button {
-                    class: "px-20 py-10 bg-yellow-300 text-9xl font-bold rounded-xl flex items-center justify-center leading-none transition-colors duration-100 hover:bg-yellow-400",
+                    class: "px-20 py-10 border bg-yellow-100 text-9xl font-bold rounded-xl flex items-center justify-center leading-none transition-colors duration-100 hover:bg-yellow-200",
                     onclick: move|_| {
                         let _ = navigator().push(Route::New {});
                     },

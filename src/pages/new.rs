@@ -61,8 +61,8 @@ fn get_first_id ()->u32{
 
 pub fn New() -> Element {
     static NEXT_ID: LazyLock<AtomicU32> = LazyLock::new(|| {
-        AtomicU32::new(get_first_id())
-    }); 
+        AtomicU32::new(get_first_id() + 1)
+    });
        
     fn get_next_id() -> u32 {
         NEXT_ID.fetch_add(1, Ordering::SeqCst)
@@ -148,7 +148,7 @@ pub fn New() -> Element {
                 class: "w-64 h-full py-5 px-5 bg-neutral-200",
                 
                 button {
-                    class: "w-full rounded-lg py-2 px-4 bg-cyan-50 text-lg font-bold text-left transition-colors duration-100 hover:bg-cyan-100",
+                    class: "w-full rounded-lg border py-2 px-4 bg-cyan-50 text-lg font-bold text-left transition-colors duration-100 hover:bg-cyan-100",
                     onclick: move |_| {
                         let _ = navigator().push(Home {});
                     },
@@ -156,15 +156,16 @@ pub fn New() -> Element {
                 }
             }
             div {
-                class: "flex flex-1 flex-col p-4 items-center space-y-6 overflow-y-auto",
+                // Reserve space for the vertical scrollbar on both edges to avoid any lateral shift when it appears
+                class: "flex flex-1 flex-col p-4 items-center space-y-6 overflow-y-auto [scrollbar-gutter:stable_both-edges]",
                 
                 div {
                     class: "flex flex-row gap-4 items-center mb-6 w-full max-w-4xl",
                    
                     button {
-                        class: "px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
+                        class: "px-4 py-2 border bg-yellow-100 border-gray-300 rounded-lg hover:bg-yellow-200",
                         onclick: add_exercise,
-                        "Ajouter un exercice"
+                        "Add an exercise"
                     }
 
                     input {
@@ -180,7 +181,7 @@ pub fn New() -> Element {
                     }
                     
                     button {
-                        class: "px-6 py-3 bg-blue-500 text-white font-medium rounded-lg transition-colors duration-200 hover:bg-blue-600",
+                        class: "px-4 py-2 border bg-green-100 font-medium rounded-lg transition-colors duration-200 hover:bg-green-200",
                         onclick: save_data_closure,
                         "Save"
                     }

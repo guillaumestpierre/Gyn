@@ -147,7 +147,7 @@ pub fn Hist() -> Element {
                 class: "w-64 h-full py-5 px-5 bg-neutral-200",
                 
                 button {
-                    class: "w-full rounded-lg py-2 px-4 bg-cyan-50 text-lg font-bold text-left transition-colors duration-100 hover:bg-cyan-100",
+                    class: "w-full border rounded-lg py-2 px-4 bg-cyan-50 text-lg font-bold text-left transition-colors duration-100 hover:bg-cyan-100",
                     onclick: move |_| {
                         let _ = navigator().push(Home {});
                     },
@@ -159,7 +159,6 @@ pub fn Hist() -> Element {
                         
                 div {
                     class: "grid grid-cols-1 gap-6 w-full px-4",
-                    key: "{exercises.read().len()}",
                     {exercises.iter().map(|ex_with_id| {
                         let id = ex_with_id.exid;
                         rsx! {
