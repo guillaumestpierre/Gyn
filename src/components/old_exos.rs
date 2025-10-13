@@ -3,7 +3,6 @@ use chrono::NaiveDate;
 use dioxus::prelude::*;
 use crate::models::{r#const::EXERCISE_LIST, training::Exercise};
 
-// TODO: fix UI, copy new_exos UI when modifying
 #[component]
 pub fn OldExo(
     exercise: Option<Exercise>,

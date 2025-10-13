@@ -107,7 +107,7 @@ pub fn Poids() -> Element {
         div {
             class: "flex h-screen bg-neutral-300",   
             div {
-                class: "w-64 h-full py-5 px-5 bg-neutral-200",
+                class: "w-64 flex-none h-full py-5 px-5 bg-neutral-200",
                 
                 button {
                     class: "w-full rounded-lg py-2 px-4 bg-cyan-50 text-lg font-bold text-left transition-colors duration-100 hover:bg-cyan-100",
@@ -118,19 +118,21 @@ pub fn Poids() -> Element {
                 }
             }
             div {
-                class: "flex flex-1 flex-col justify-center items-center space-y-6",
-
-                LineChart{
-                    series: vec![chart_serie.clone()],
-                    labels: chart_label,
-                    width: "140%",
-                    height: "140%",
-                    lowest: 150.0,
-                    highest: 180.0,
-                    show_dots: false
+                class: "flex flex-1 min-w-0 flex-col justify-center items-center space-y-6",
+                div {
+                    class: "w-full max-w-full h-[85vh] flex items-center justify-center",
+                    LineChart{
+                        series: vec![chart_serie.clone()],
+                        labels: chart_label,
+                        width: "750",
+                        height: "450",
+                        lowest: 150.0,
+                        highest: 185.0,
+                        show_dots: false
+                    }
                 }
                 div {
-                    class: "flex flex-none pt-[120px] pl-[150px] flex-row space-x-6",
+                    class: "flex flex-none pt-8 pb-6 flex-row space-x-6",
                     
                     div {
                         class: "flex flex-row gap-4",
@@ -165,7 +167,7 @@ pub fn Poids() -> Element {
                 }
             }
             div {
-                class:"grid grid-cols-1 content-start py-5 px-5 h-110 overflow-y-auto",
+                class:"w-64 flex-none grid grid-cols-1 content-start py-5 px-5 h-110 overflow-y-auto",
                 {data.iter().rev().map(|(date, weight)| {
                     let date = date.to_owned();
                     let weight = *weight;
