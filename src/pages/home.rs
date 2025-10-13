@@ -5,7 +5,7 @@ use crate::routes::routes::Route;
 pub fn Home() -> Element {
     let pages = vec![
         (Route::Stats {}, "Stats"),
-        (Route::Poids {}, "Poids"),
+        (Route::Weight {}, "Weight"),
         (Route::Hist {}, "Historique"),
         (Route::ExosList {}, "Exercices"),
     ];

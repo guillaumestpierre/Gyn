@@ -105,7 +105,7 @@ pub fn New() -> Element {
                 }
             }
         } else {
-            save_error.set(Some("Aucun exercice valide à enregistrer".to_string()));
+            save_error.set(Some("Aucun exercice valide à Save".to_string()));
             save_success.set(false);
         }
     };
@@ -182,7 +182,7 @@ pub fn New() -> Element {
                     button {
                         class: "px-6 py-3 bg-blue-500 text-white font-medium rounded-lg transition-colors duration-200 hover:bg-blue-600",
                         onclick: save_data_closure,
-                        "Enregistrer"
+                        "Save"
                     }
                 }
                            

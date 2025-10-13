@@ -98,9 +98,9 @@ pub fn OldExo(
                             edit_state.set(!current_state);
                         },
                         if *edit_state.read() {
-                            "Enregistrer"
+                            "Save"
                         } else {
-                            "Modifier"
+                            "Edit"
                         }
                     }
                 }
@@ -196,10 +196,10 @@ pub fn OldExo(
                 
                 div {
                     class: "flex flex-row items-center gap-3 text-sm font-medium text-gray-600 mb-2",
-                    div { class: "flex-1", "Répétitions" }
+                    div { class: "flex-1", "Reps" }
                     div { 
                         class: "flex-1 flex items-center gap-2",
-                        span { "Poids " }
+                        span { "Weight " }
                         span { if *use_lbs.read() { "(lbs)" } else { "(kg)" } }
                         label {
                             class: "inline-flex items-center cursor-pointer ml-2",

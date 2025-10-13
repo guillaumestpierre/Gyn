@@ -45,7 +45,7 @@ fn fetch_data() -> Result<Vec<(NaiveDate, f32)>> {
     Ok(rows.collect::<Result<Vec<_>>>()?)
 }
 
-pub fn Poids() -> Element {
+pub fn Weight() -> Element {
     let mut weight_history = use_signal(|| fetch_data().unwrap());
     let data = weight_history.read().clone();
 
@@ -77,7 +77,7 @@ pub fn Poids() -> Element {
                     save_error.set(None);
                     weight_text.set("".to_string());
                     weight_history.set(fetch_data().unwrap());
-                    println!("Données sauvegardées: Poids={}, Date={}", add_data.0, add_data.1);
+                    println!("Données sauvegardées: Weight={}, Date={}", add_data.0, add_data.1);
                 },
                 Err(e) => {
                     save_error.set(Some(e.to_string()));
@@ -138,7 +138,7 @@ pub fn Poids() -> Element {
                         class: "flex flex-row gap-4",
                         input {
                             class: "px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500",
-                            placeholder: "Poids (lbs)",
+                            placeholder: "Weight (lbs)",
                             value: "{weight_text}",
                             oninput: move |event| {
                                 weight_text.set(event.value().to_string());
@@ -161,7 +161,7 @@ pub fn Poids() -> Element {
                         button {
                             class: "px-6 py-3 bg-blue-500 text-white font-medium rounded-lg transition-colors duration-200 hover:bg-blue-600",
                             onclick: save_data_closure,
-                            "Enregistrer"
+                            "Save"
                         }
                     }
                 }

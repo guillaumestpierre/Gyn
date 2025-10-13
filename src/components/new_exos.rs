@@ -144,10 +144,10 @@ pub fn NewExo(
                 
                 div {
                     class: "flex flex-row items-center gap-3 text-sm font-medium text-gray-600 mb-2",
-                    div { class: "flex-1", "Répétitions" }
+                    div { class: "flex-1", "Reps" }
                     div { 
                         class: "flex-1 flex items-center gap-2",
-                        span { "Poids " }
+                        span { "Weight " }
                         span { if *use_lbs.read() { "(lbs)" } else { "(kg)" } }
                         label {
                             class: "inline-flex items-center cursor-pointer ml-2",
@@ -197,7 +197,7 @@ pub fn NewExo(
                                 r#type: "number",
                                 min: "0",
                                 step: "0.1",
-                                placeholder: "Poids",
+                                placeholder: "Weight",
                                 value: "{value_str}",
                                 onfocus: move |_| {
                                     editing_rep.set(Some(rep_index));
