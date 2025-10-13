@@ -74,7 +74,7 @@ pub fn OldExo(
     rsx! {
         div {
             class: {
-                let base_class = "flex flex-col p-6 rounded-lg shadow-md gap-4 w-full";
+                let base_class = "flex flex-col p-6 rounded-lg shadow-md gap-4 w-full transform-cpu";
                 if *to_delete.read() {
                     format!("{} bg-red-100", base_class)
                 } else {
@@ -116,13 +116,11 @@ pub fn OldExo(
                         input {
                             class: "sr-only peer",
                             r#type: "checkbox",
-                            disabled: match !*edit_state.read(){
-                                true => {true},
-                                false => {false}
-                            },
+                            disabled: !*edit_state.read(),
                             checked: *starter.read(),
-                            oninput: move |event| {
-                                starter.set(event.value().parse().unwrap_or(false));
+                            onclick: move |_| {
+                                let current = *starter.read();
+                                starter.set(!current);
                             }
                         }
                         div {

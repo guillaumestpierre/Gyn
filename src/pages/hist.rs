@@ -105,10 +105,9 @@ fn delete_data(id:u32) -> rusqlite::Result<()> {
 
 pub fn Hist() -> Element {
 
-    let data = fetch_exercises();
-    let mut exercises = use_signal( || match data {
-        Ok(_) => {data.unwrap()},
-        Err(_)=>{Vec::new()}
+    let mut exercises = use_signal(|| match fetch_exercises() {
+        Ok(exos) => exos,
+        Err(_) => Vec::new()
     });
 
     let mut update_exercise = move |id: u32, updated_exercise: Exercise| {
